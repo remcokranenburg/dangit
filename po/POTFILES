@@ -1,0 +1,6 @@
+data/com.remcokranenburg.Dangit.desktop.in
+data/com.remcokranenburg.Dangit.metainfo.xml.in
+data/com.remcokranenburg.Dangit.gschema.xml
+src/main.py
+src/window.py
+src/window.ui

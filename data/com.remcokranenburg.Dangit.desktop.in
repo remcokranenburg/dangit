@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=dangit
+Exec=dangit
+Icon=com.remcokranenburg.Dangit
+Terminal=false
+Type=Application
+Categories=GTK;
+StartupNotify=true
