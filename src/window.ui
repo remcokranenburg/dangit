@@ -5,77 +5,94 @@
   <template class="DangitWindow" parent="AdwApplicationWindow">
     <property name="default-width">600</property>
     <property name="default-height">300</property>
+    <child>
+      <object class="AdwBreakpoint">
+        <condition>max-width: 400sp</condition>
+        <setter object="split_view" property="collapsed">True</setter>
+      </object>
+    </child>
     <property name="content">
-      <object class="AdwToolbarView">
-        <child type="top">
-          <object class="AdwHeaderBar" id="header_bar">
-            <child type="title">
-              <object class="AdwWindowTitle">
-                <property name="title">Dangit!</property>
-              </object>
-            </child>
-            <child type="end">
-              <object class="GtkMenuButton">
-                <property name="primary">True</property>
-                <property name="icon-name">open-menu-symbolic</property>
-                <property name="tooltip-text" translatable="yes">Menu</property>
-                <property name="menu-model">primary_menu</property>
-              </object>
-            </child>
-          </object>
-        </child>
-        <property name="content">
-          <object class="GtkPaned" id="pane_widget">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="orientation">horizontal</property>
-            <property name="position_set">True</property>
-            <property name="wide_handle">True</property>
-            <child>
-              <object class="GtkScrolledWindow">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="hexpand">True</property>
-                <property name="vexpand">True</property>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">A directory listing</property>
-                  </object>
+      <object class="AdwNavigationSplitView" id="split_view">
+        <property name="sidebar">
+          <object class="AdwNavigationPage">
+            <property name="title" translatable="yes">Files</property>
+            <property name="tag">sidebar</property>
+            <property name="child">
+              <object class="AdwToolbarView">
+                <child type="top">
+                  <object class="AdwHeaderBar"/>
                 </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkScrolledWindow">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="hexpand">True</property>
-                <property name="vexpand">True</property>
-                <child>
-                  <object class="GtkSourceView" id="editor">
-                    <property name="name">myeditor</property>
+                <property name="content">
+                  <object class="GtkScrolledWindow">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="wrap_mode">word</property>
-                    <property name="left_margin">2</property>
-                    <property name="right_margin">2</property>
-                    <property name="top_margin">2</property>
-                    <property name="bottom_margin">2</property>
-                    <property name="show_line_numbers">True</property>
-                    <property name="tab_width">4</property>
-                    <property name="auto_indent">True</property>
-                    <property name="insert_spaces_instead_of_tabs">True</property>
-                    <property name="right_margin_position">79</property>
-                    <property name="highlight_current_line">True</property>
-                    <style>
-                      <class name="myeditor"/>
-                    </style>
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">A directory listing</property>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+              </object>
+            </property>
+          </object>
+        </property>
+        <property name="content">
+          <object class="AdwNavigationPage">
+            <property name="title" translatable="yes">Dangit!</property>
+            <property name="tag">content</property>
+            <property name="child">
+              <object class="AdwToolbarView">
+                <child type="top">
+                  <object class="AdwHeaderBar" id="header_bar">
+                    <child type="title">
+                      <object class="AdwWindowTitle">
+                        <property name="title">Dangit!</property>
+                      </object>
+                    </child>
+                    <child type="end">
+                      <object class="GtkMenuButton">
+                        <property name="primary">True</property>
+                        <property name="icon-name">open-menu-symbolic</property>
+                        <property name="tooltip-text" translatable="yes">Menu</property>
+                        <property name="menu-model">primary_menu</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
+                <property name="content">
+                  <object class="GtkScrolledWindow">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
+                    <child>
+                      <object class="GtkSourceView" id="editor">
+                        <property name="name">myeditor</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="wrap_mode">word</property>
+                        <property name="left_margin">2</property>
+                        <property name="right_margin">2</property>
+                        <property name="top_margin">2</property>
+                        <property name="bottom_margin">2</property>
+                        <property name="show_line_numbers">True</property>
+                        <property name="tab_width">4</property>
+                        <property name="auto_indent">True</property>
+                        <property name="insert_spaces_instead_of_tabs">True</property>
+                        <property name="right_margin_position">79</property>
+                        <property name="highlight_current_line">True</property>
+                        <style>
+                          <class name="myeditor"/>
+                        </style>
+                      </object>
+                    </child>
+                  </object>
+                </property>
               </object>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
+            </property>
           </object>
         </property>
       </object>
