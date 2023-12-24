@@ -19,12 +19,13 @@
 
 import sys
 import gi
+from pathlib import Path
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('GtkSource', '5')
 gi.require_version('Adw', '1')
 
-from gi.repository import GObject, Gtk, Gio, Adw, GtkSource
+from gi.repository import GLib, GObject, Gtk, Gio, Adw, GtkSource
 from .window import DangitWindow
 
 
@@ -36,6 +37,7 @@ class DangitApplication(Adw.Application):
                          flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
         GtkSource.init()
         GObject.type_register(GtkSource.View)
+        self.create_action('open-folder', self.on_open_folder_action, ['<primary>o'])
         self.create_action('quit', lambda *_: self.quit(), ['<primary>q'])
         self.create_action('about', self.on_about_action)
         self.create_action('preferences', self.on_preferences_action)
@@ -50,6 +52,25 @@ class DangitApplication(Adw.Application):
         if not win:
             win = DangitWindow(application=self)
         win.present()
+
+    def on_open_folder_action(self, widget, _):
+        """Callback for the app.open-folder action."""
+
+        def on_selected(dialog, result):
+            try:
+                folder = dialog.select_folder_finish(result)
+                print(folder.get_path())
+                p = Path(folder.get_path())
+                print(p)
+                for d in p.iterdir():
+                    print(" -", d)
+
+            except GLib.GError as e:
+                print("Nothing selected")
+
+        directory = Gio.File.new_for_path("/home/remco/Downloads")
+        dialog = Gtk.FileDialog(initial_folder=directory)
+        dialog.select_folder(self.props.active_window, None, on_selected)
 
     def on_about_action(self, widget, _):
         """Callback for the app.about action."""
