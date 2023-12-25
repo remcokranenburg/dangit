@@ -24,6 +24,7 @@ from gi.repository import Gtk
 class DangitWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'DangitWindow'
 
+    stack = Gtk.Template.Child()
     editor = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
@@ -31,3 +32,8 @@ class DangitWindow(Adw.ApplicationWindow):
 
         self.editor.set_smart_backspace(True)
         self.editor.set_show_line_marks(True)
+
+        provider = Gtk.CssProvider()
+        provider.load_from_data("textview { font-family: Monospace; }")
+        self.editor.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+

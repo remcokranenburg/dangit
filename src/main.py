@@ -37,7 +37,8 @@ class DangitApplication(Adw.Application):
                          flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
         GtkSource.init()
         GObject.type_register(GtkSource.View)
-        self.create_action('open-folder', self.on_open_folder_action, ['<primary>o'])
+        self.create_action('open-project', self.on_open_project_action, ['<primary>o'])
+        self.create_action('open-folder', self.on_open_folder_action)
         self.create_action('quit', lambda *_: self.quit(), ['<primary>q'])
         self.create_action('about', self.on_about_action)
         self.create_action('preferences', self.on_preferences_action)
@@ -53,6 +54,10 @@ class DangitApplication(Adw.Application):
             win = DangitWindow(application=self)
         win.present()
 
+    def on_open_project_action(self, wiget, _):
+        """Callback for the app.open-project action."""
+        self.props.active_window.stack.set_visible_child_name("projects")
+
     def on_open_folder_action(self, widget, _):
         """Callback for the app.open-folder action."""
 
@@ -65,10 +70,12 @@ class DangitApplication(Adw.Application):
                 for d in p.iterdir():
                     print(" -", d)
 
+                self.props.active_window.stack.set_visible_child_name("editor")
+
             except GLib.GError as e:
                 print("Nothing selected")
 
-        directory = Gio.File.new_for_path("/home/remco/Downloads")
+        directory = Gio.File.new_for_path("/")
         dialog = Gtk.FileDialog(initial_folder=directory)
         dialog.select_folder(self.props.active_window, None, on_selected)
 
