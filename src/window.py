@@ -19,6 +19,7 @@
 
 from gi.repository import Adw
 from gi.repository import Gtk
+from gi.repository import GLib
 
 @Gtk.Template(resource_path='/com/remcokranenburg/Dangit/window.ui')
 class DangitWindow(Adw.ApplicationWindow):
@@ -26,6 +27,7 @@ class DangitWindow(Adw.ApplicationWindow):
 
     stack = Gtk.Template.Child()
     editor = Gtk.Template.Child()
+    files = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -37,3 +39,16 @@ class DangitWindow(Adw.ApplicationWindow):
         provider.load_from_data("textview { font-family: Monospace; }")
         self.editor.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
+        def on_bind(self, list_item):
+            label = list_item.get_child()
+            model = list_item.get_item()
+            label.set_label(model.get_display_name())
+
+        def on_setup(self, list_item):
+            list_item.set_child(Gtk.Label.new())
+
+        factory = Gtk.SignalListItemFactory.new()
+        factory.connect("bind", on_bind)
+        factory.connect("setup", on_setup)
+
+        self.files.set_factory(factory)

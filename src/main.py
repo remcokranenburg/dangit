@@ -64,12 +64,14 @@ class DangitApplication(Adw.Application):
         def on_selected(dialog, result):
             try:
                 folder = dialog.select_folder_finish(result)
-                print(folder.get_path())
-                p = Path(folder.get_path())
-                print(p)
-                for d in p.iterdir():
-                    print(" -", d)
+                children = Gtk.DirectoryList.new("standard::display-name", folder)
+                selection_model = Gtk.SingleSelection.new(children)
 
+                def on_selected_file(*args):
+                    print("selected list item", args)
+
+                selection_model.connect("selection_changed", on_selected_file)
+                self.props.active_window.files.set_model(selection_model)
                 self.props.active_window.stack.set_visible_child_name("editor")
 
             except GLib.GError as e:

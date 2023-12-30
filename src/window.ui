@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <interface>
   <requires lib="gtk" version="4.0"/>
   <requires lib="Adw" version="1.0"/>
@@ -82,9 +82,7 @@
                             <property name="hexpand">True</property>
                             <property name="vexpand">True</property>
                             <child>
-                              <object class="GtkLabel">
-                                <property name="label">A directory listing</property>
-                              </object>
+                              <object class="GtkListView" id="files"></object>
                             </child>
                           </object>
                         </property>
