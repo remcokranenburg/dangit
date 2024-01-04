@@ -67,8 +67,23 @@ class DangitApplication(Adw.Application):
                 children = Gtk.DirectoryList.new("standard::display-name", folder)
                 selection_model = Gtk.SingleSelection.new(children)
 
-                def on_selected_file(*args):
-                    print("selected list item", args)
+                for f in ["README.md", "README.txt", "README"]:
+                    file = folder.get_child(f)
+
+                    if file.query_exists():
+                        buffer = self.props.active_window.editor.get_buffer()
+                        source_file = GtkSource.File(location=file)
+                        loader = GtkSource.FileLoader.new(buffer, source_file)
+                        loader.load_async(GLib.PRIORITY_DEFAULT, None, None, None, None, None)
+                        break
+
+                def on_selected_file(selection, *_):
+                    selected_item = selection.get_selected_item()
+                    selected_file = selected_item.get_attribute_object("standard::file")
+                    buffer = self.props.active_window.editor.get_buffer()
+                    source_file = GtkSource.File(location=selected_file)
+                    loader = GtkSource.FileLoader.new(buffer, source_file)
+                    loader.load_async(GLib.PRIORITY_DEFAULT, None, None, None, None, None)
 
                 selection_model.connect("selection_changed", on_selected_file)
                 self.props.active_window.files.set_model(selection_model)

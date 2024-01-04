@@ -19,6 +19,7 @@
 
 from gi.repository import Adw
 from gi.repository import Gtk
+from gi.repository import GtkSource
 from gi.repository import GLib
 
 @Gtk.Template(resource_path='/com/remcokranenburg/Dangit/window.ui')
@@ -40,12 +41,15 @@ class DangitWindow(Adw.ApplicationWindow):
         self.editor.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
         def on_bind(self, list_item):
-            label = list_item.get_child()
+            box = list_item.get_child()
+            label = box.get_first_child()
             model = list_item.get_item()
             label.set_label(model.get_display_name())
 
         def on_setup(self, list_item):
-            list_item.set_child(Gtk.Label.new())
+            box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+            box.append(Gtk.Label.new())
+            list_item.set_child(box)
 
         factory = Gtk.SignalListItemFactory.new()
         factory.connect("bind", on_bind)
