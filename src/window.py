@@ -17,10 +17,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-from gi.repository import Adw
-from gi.repository import Gtk
-from gi.repository import GtkSource
-from gi.repository import GLib
+from gi.repository import Adw, Gio, Gtk, GtkSource, GLib
 
 @Gtk.Template(resource_path='/com/remcokranenburg/Dangit/window.ui')
 class DangitWindow(Adw.ApplicationWindow):
@@ -32,6 +29,8 @@ class DangitWindow(Adw.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.create_action('open-folder', self.on_open_folder_action)
 
         self.editor.set_smart_backspace(True)
         self.editor.set_show_line_marks(True)
@@ -56,3 +55,48 @@ class DangitWindow(Adw.ApplicationWindow):
         factory.connect("setup", on_setup)
 
         self.files.set_factory(factory)
+
+    def load_selected_folder(self, folder: Gio.File):
+        children = Gtk.DirectoryList.new("standard::display-name", folder)
+        selection_model = Gtk.SingleSelection.new(children)
+
+        def on_selected_file(selection, *_):
+            selected_item = selection.get_selected_item()
+            selected_file = selected_item.get_attribute_object("standard::file")
+            buffer = self.editor.get_buffer()
+            source_file = GtkSource.File(location=selected_file)
+            loader = GtkSource.FileLoader.new(buffer, source_file)
+            loader.load_async(GLib.PRIORITY_DEFAULT, None, None, None, None, None)
+
+        selection_model.connect("selection_changed", on_selected_file)
+        self.files.set_model(selection_model)
+        self.stack.set_visible_child_name("editor")
+
+    def on_open_folder_action(self, widget, _):
+        """Callback for the app.open-folder action."""
+
+        def on_selected(dialog, result):
+            try:
+                folder = dialog.select_folder_finish(result)
+                self.load_selected_folder(folder)
+            except GLib.GError as e:
+                print("Nothing selected")
+
+        directory = Gio.File.new_for_path("/")
+        dialog = Gtk.FileDialog(initial_folder=directory)
+        dialog.select_folder(self, None, on_selected)
+
+    def create_action(self, name, callback, shortcuts=None):
+        """Add an application action.
+
+        Args:
+            name: the name of the action
+            callback: the function to be called when the action is
+              activated
+            shortcuts: an optional list of accelerators
+        """
+        action = Gio.SimpleAction.new(name, None)
+        action.connect("activate", callback)
+        self.add_action(action)
+        if shortcuts:
+            self.set_accels_for_action(f"win.{name}", shortcuts)

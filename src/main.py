@@ -25,7 +25,7 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('GtkSource', '5')
 gi.require_version('Adw', '1')
 
-from gi.repository import GLib, GObject, Gtk, Gio, Adw, GtkSource
+from gi.repository import GObject, Gio, Adw, GtkSource
 from .window import DangitWindow
 
 
@@ -38,7 +38,6 @@ class DangitApplication(Adw.Application):
         GtkSource.init()
         GObject.type_register(GtkSource.View)
         self.create_action('open-project', self.on_open_project_action, ['<primary>o'])
-        self.create_action('open-folder', self.on_open_folder_action)
         self.create_action('quit', lambda *_: self.quit(), ['<primary>q'])
         self.create_action('about', self.on_about_action)
         self.create_action('preferences', self.on_preferences_action)
@@ -54,47 +53,10 @@ class DangitApplication(Adw.Application):
             win = DangitWindow(application=self)
         win.present()
 
-    def on_open_project_action(self, wiget, _):
+    def on_open_project_action(self, widget, _):
         """Callback for the app.open-project action."""
+        # TODO: create a new window and set it to the projects view
         self.props.active_window.stack.set_visible_child_name("projects")
-
-    def on_open_folder_action(self, widget, _):
-        """Callback for the app.open-folder action."""
-
-        def on_selected(dialog, result):
-            try:
-                folder = dialog.select_folder_finish(result)
-                children = Gtk.DirectoryList.new("standard::display-name", folder)
-                selection_model = Gtk.SingleSelection.new(children)
-
-                for f in ["README.md", "README.txt", "README"]:
-                    file = folder.get_child(f)
-
-                    if file.query_exists():
-                        buffer = self.props.active_window.editor.get_buffer()
-                        source_file = GtkSource.File(location=file)
-                        loader = GtkSource.FileLoader.new(buffer, source_file)
-                        loader.load_async(GLib.PRIORITY_DEFAULT, None, None, None, None, None)
-                        break
-
-                def on_selected_file(selection, *_):
-                    selected_item = selection.get_selected_item()
-                    selected_file = selected_item.get_attribute_object("standard::file")
-                    buffer = self.props.active_window.editor.get_buffer()
-                    source_file = GtkSource.File(location=selected_file)
-                    loader = GtkSource.FileLoader.new(buffer, source_file)
-                    loader.load_async(GLib.PRIORITY_DEFAULT, None, None, None, None, None)
-
-                selection_model.connect("selection_changed", on_selected_file)
-                self.props.active_window.files.set_model(selection_model)
-                self.props.active_window.stack.set_visible_child_name("editor")
-
-            except GLib.GError as e:
-                print("Nothing selected")
-
-        directory = Gio.File.new_for_path("/")
-        dialog = Gtk.FileDialog(initial_folder=directory)
-        dialog.select_folder(self.props.active_window, None, on_selected)
 
     def on_about_action(self, widget, _):
         """Callback for the app.about action."""
