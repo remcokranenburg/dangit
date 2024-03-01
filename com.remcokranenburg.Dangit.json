@@ -1,5 +1,5 @@
 {
-    "app-id" : "com.remcokranenburg.Dangit",
+    "id" : "com.remcokranenburg.Dangit",
     "runtime" : "org.gnome.Platform",
     "runtime-version" : "45",
     "sdk" : "org.gnome.Sdk",
