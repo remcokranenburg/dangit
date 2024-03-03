@@ -72,14 +72,13 @@ class DangitApplication(Adw.Application):
     def on_preferences_action(self, widget, _):
         """Callback for the app.preferences action."""
         print('app.preferences action activated')
-
-    def create_action(self, name, callback, shortcuts=None):
-        """Add an application action.
+    
+    def create_action(self, name: str, callback, shortcuts=None):
+        """Add an application action 
 
         Args:
             name: the name of the action
-            callback: the function to be called when the action is
-              activated
+            callback: called when the action is activated
             shortcuts: an optional list of accelerators
         """
         action = Gio.SimpleAction.new(name, None)

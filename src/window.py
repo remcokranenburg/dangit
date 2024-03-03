@@ -27,6 +27,11 @@ class DangitWindow(Adw.ApplicationWindow):
     editor = Gtk.Template.Child()
     files = Gtk.Template.Child()
 
+    buffer: GtkSource.Buffer
+    language_manager = GtkSource.LanguageManager()
+    settings = Gtk.Settings.get_default()
+    style_scheme_manager = GtkSource.StyleSchemeManager()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -34,6 +39,17 @@ class DangitWindow(Adw.ApplicationWindow):
 
         self.editor.set_smart_backspace(True)
         self.editor.set_show_line_marks(True)
+
+        self.buffer = self.editor.get_buffer()
+
+        def set_scheme(settings, *_):
+            if settings.get_property("gtk-application-prefer-dark-theme"):
+                self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme('classic-dark'))
+            else:
+                self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme('classic'))
+        
+        self.settings.connect("notify::gtk-application-prefer-dark-theme", set_scheme)
+        set_scheme(self.settings)
 
         provider = Gtk.CssProvider()
         provider.load_from_data("textview { font-family: Monospace; }")
@@ -63,40 +79,37 @@ class DangitWindow(Adw.ApplicationWindow):
         def on_selected_file(selection, *_):
             selected_item = selection.get_selected_item()
             selected_file = selected_item.get_attribute_object("standard::file")
-            buffer = self.editor.get_buffer()
+            guessed_language = self.language_manager.guess_language(selected_file.get_path(), None)
+            self.buffer.set_language(guessed_language)
             source_file = GtkSource.File(location=selected_file)
-            loader = GtkSource.FileLoader.new(buffer, source_file)
+            loader = GtkSource.FileLoader.new(self.buffer, source_file)
             loader.load_async(GLib.PRIORITY_DEFAULT, None, None, None, None, None)
 
         selection_model.connect("selection_changed", on_selected_file)
         self.files.set_model(selection_model)
         self.stack.set_visible_child_name("editor")
 
-    def on_open_folder_action(self, widget, _):
-        """Callback for the app.open-folder action."""
+    def on_open_folder_action(self, *_):
+        """Callback for the win.open-folder action."""
 
         def on_selected(dialog, result):
             try:
                 folder = dialog.select_folder_finish(result)
                 self.load_selected_folder(folder)
-            except GLib.GError as e:
+            except GLib.GError:
                 print("Nothing selected")
 
         directory = Gio.File.new_for_path("/")
         dialog = Gtk.FileDialog(initial_folder=directory)
         dialog.select_folder(self, None, on_selected)
 
-    def create_action(self, name, callback, shortcuts=None):
-        """Add an application action.
+    def create_action(self, name, callback):
+        """Add a window action
 
         Args:
             name: the name of the action
-            callback: the function to be called when the action is
-              activated
-            shortcuts: an optional list of accelerators
+            callback: called when the action is activated
         """
         action = Gio.SimpleAction.new(name, None)
         action.connect("activate", callback)
         self.add_action(action)
-        if shortcuts:
-            self.set_accels_for_action(f"win.{name}", shortcuts)
