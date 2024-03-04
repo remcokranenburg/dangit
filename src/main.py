@@ -55,8 +55,8 @@ class DangitApplication(Adw.Application):
 
     def on_open_project_action(self, widget, _):
         """Callback for the app.open-project action."""
-        # TODO: create a new window and set it to the projects view
-        self.props.active_window.stack.set_visible_child_name("projects")
+        win = DangitWindow(application=self)
+        win.present()
 
     def on_about_action(self, widget, _):
         """Callback for the app.about action."""

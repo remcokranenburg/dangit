@@ -157,11 +157,7 @@
     <section>
       <item>
         <attribute name="label" translatable="yes">_Open Folder</attribute>
-        <attribute name="action">app.open-folder</attribute>
-      </item>
-      <item>
-        <attribute name="label" translatable="yes">_Preferences</attribute>
-        <attribute name="action">app.preferences</attribute>
+        <attribute name="action">app.open-project</attribute>
       </item>
       <item>
         <attribute name="label" translatable="yes">_Keyboard Shortcuts</attribute>
