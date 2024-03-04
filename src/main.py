@@ -32,6 +32,8 @@ from .window import DangitWindow
 class DangitApplication(Adw.Application):
     """The main application singleton class."""
 
+    version = "unknown"
+
     def __init__(self):
         super().__init__(application_id='com.remcokranenburg.Dangit',
                          flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
@@ -64,7 +66,7 @@ class DangitApplication(Adw.Application):
                                 application_name='Dangit!',
                                 application_icon='com.remcokranenburg.Dangit',
                                 developer_name='Remco Kranenburg',
-                                version='0.1.0',
+                                version=self.version,
                                 developers=['Remco Kranenburg'],
                                 copyright='© 2023 Remco Kranenburg')
         about.present()
@@ -91,4 +93,5 @@ class DangitApplication(Adw.Application):
 def main(version):
     """The application's entry point."""
     app = DangitApplication()
+    app.version = version
     return app.run(sys.argv)
