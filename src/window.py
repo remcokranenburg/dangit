@@ -33,8 +33,13 @@ class DangitWindow(Adw.ApplicationWindow):
 
     # theming
     language_manager = GtkSource.LanguageManager()
-    settings = Gtk.Settings.get_default()
     style_scheme_manager = GtkSource.StyleSchemeManager()
+
+    def set_editor_style(self, settings, *_):
+        if settings.get_property("gtk-application-prefer-dark-theme"):
+            self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme('classic-dark'))
+        else:
+            self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme('classic'))
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -58,14 +63,9 @@ class DangitWindow(Adw.ApplicationWindow):
 
         self.buffer = self.editor.get_buffer()
 
-        def set_scheme(settings, *_):
-            if settings.get_property("gtk-application-prefer-dark-theme"):
-                self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme('classic-dark'))
-            else:
-                self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme('classic'))
-        
-        self.settings.connect("notify::gtk-application-prefer-dark-theme", set_scheme)
-        set_scheme(self.settings)
+        os_settings = Gtk.Settings.get_default()
+        os_settings.connect("notify::gtk-application-prefer-dark-theme", self.set_editor_style)
+        self.set_editor_style(os_settings)
 
         provider = Gtk.CssProvider()
         provider.load_from_data("textview { font-family: Monospace; }")
