@@ -24,16 +24,16 @@ class DangitWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'DangitWindow'
 
     # ui elements
-    stack = Gtk.Template.Child()
-    editor = Gtk.Template.Child()
-    files = Gtk.Template.Child()
+    stack: Gtk.Stack = Gtk.Template.Child()
+    editor: GtkSource.View = Gtk.Template.Child()
+    files: Gtk.ListView = Gtk.Template.Child()
 
     # project data
     buffer: GtkSource.Buffer
 
     # theming
-    language_manager = GtkSource.LanguageManager()
-    style_scheme_manager = GtkSource.StyleSchemeManager()
+    language_manager: GtkSource.LanguageManager
+    style_scheme_manager: GtkSource.StyleSchemeManager
 
     def set_editor_style(self, settings, *_):
         if settings.get_property("gtk-application-prefer-dark-theme"):
@@ -43,6 +43,10 @@ class DangitWindow(Adw.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.buffer = self.editor.get_buffer()
+        self.language_manager = GtkSource.LanguageManager.get_default()
+        self.style_scheme_manager = GtkSource.StyleSchemeManager.get_default()
 
         self.create_action('open-folder', self.on_open_folder_action)
 
@@ -61,15 +65,14 @@ class DangitWindow(Adw.ApplicationWindow):
         app_settings.bind("window-width", self, "default-width", Gio.SettingsBindFlags.SET)
         app_settings.bind("window-height", self, "default-height", Gio.SettingsBindFlags.SET)
 
-        self.buffer = self.editor.get_buffer()
-
         os_settings = Gtk.Settings.get_default()
         os_settings.connect("notify::gtk-application-prefer-dark-theme", self.set_editor_style)
         self.set_editor_style(os_settings)
 
         provider = Gtk.CssProvider()
         provider.load_from_data("textview { font-family: Monospace; }")
-        self.editor.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        style_context = self.editor.get_style_context()
+        style_context.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
         def on_bind(self, list_item):
             box = list_item.get_child()
