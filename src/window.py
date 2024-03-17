@@ -23,11 +23,15 @@ from gi.repository import Adw, Gio, Gtk, GtkSource, GLib
 class DangitWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'DangitWindow'
 
+    # ui elements
     stack = Gtk.Template.Child()
     editor = Gtk.Template.Child()
     files = Gtk.Template.Child()
 
+    # project data
     buffer: GtkSource.Buffer
+
+    # theming
     language_manager = GtkSource.LanguageManager()
     settings = Gtk.Settings.get_default()
     style_scheme_manager = GtkSource.StyleSchemeManager()
@@ -39,6 +43,18 @@ class DangitWindow(Adw.ApplicationWindow):
 
         self.editor.set_smart_backspace(True)
         self.editor.set_show_line_marks(True)
+
+        app_settings = Gio.Settings.new('com.remcokranenburg.Dangit')
+
+        # set initial values
+        self.set_property("maximized", app_settings.get_boolean("window-maximized"))
+        self.set_property("default-width", app_settings.get_int("window-width"))
+        self.set_property("default-height", app_settings.get_int("window-height"))
+
+        # update settings when window is resized
+        app_settings.bind("window-maximized", self, "maximized", Gio.SettingsBindFlags.SET)
+        app_settings.bind("window-width", self, "default-width", Gio.SettingsBindFlags.SET)
+        app_settings.bind("window-height", self, "default-height", Gio.SettingsBindFlags.SET)
 
         self.buffer = self.editor.get_buffer()
 

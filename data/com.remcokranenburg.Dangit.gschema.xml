@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="dangit">
-	<schema id="com.remcokranenburg.Dangit" path="/com/remcokranenburg/Dangit/">
-	</schema>
+  <schema id="com.remcokranenburg.Dangit" path="/com/remcokranenburg/Dangit/">
+    <key name="window-width" type="i">
+      <default>600</default>
+      <summary>Window width</summary>
+      <description>Width of the window</description>
+    </key>
+    <key name="window-height" type="i">
+      <default>300</default>
+      <summary>Window height</summary>
+      <description>Height of the window</description>
+    </key>
+    <key name="window-maximized" type="b">
+      <default>false</default>
+      <summary>Window maximized</summary>
+      <description>Maximized state of the window</description>
+    </key>
+  </schema>
 </schemalist>

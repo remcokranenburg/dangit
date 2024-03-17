@@ -32,7 +32,7 @@ from .window import DangitWindow
 class DangitApplication(Adw.Application):
     """The main application singleton class."""
 
-    version = "unknown"
+    version: str
 
     def __init__(self):
         super().__init__(application_id='com.remcokranenburg.Dangit',
@@ -43,6 +43,8 @@ class DangitApplication(Adw.Application):
         self.create_action('quit', lambda *_: self.quit(), ['<primary>q'])
         self.create_action('about', self.on_about_action)
         self.create_action('preferences', self.on_preferences_action)
+
+        self.version = "unknown"
 
     def do_activate(self):
         """Called when the application is activated.
