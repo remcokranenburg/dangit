@@ -19,7 +19,6 @@
 
 import sys
 import gi
-from pathlib import Path
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('GtkSource', '5')
