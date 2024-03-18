@@ -44,6 +44,7 @@ class DangitApplication(Adw.Application):
         GObject.type_register(GtkSource.View)
         self.create_action("open-project", self.on_open_project_action, ["<primary>o"])
         self.create_action("quit", lambda *_: self.quit(), ["<primary>q"])
+        self.create_action("close", lambda *_: self.props.active_window.close(), ["<primary>w"])
         self.create_action("about", self.on_about_action)
         self.create_action("preferences", self.on_preferences_action)
 
