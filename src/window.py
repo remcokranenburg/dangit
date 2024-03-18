@@ -19,41 +19,95 @@
 
 from gi.repository import Adw, Gio, Gtk, GtkSource, GLib
 
-@Gtk.Template(resource_path='/com/remcokranenburg/Dangit/window.ui')
+
+class ProjectsListFactory(Gtk.SignalListItemFactory):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.connect("bind", self.bind)
+        self.connect("setup", self.setup)
+
+    @staticmethod
+    def bind(self, list_item):
+        box = list_item.get_child()
+        label = box.get_first_child()
+        model: Gio.File = list_item.get_item()
+        fileinfo = model.query_info("standard::display-name", Gio.FileQueryInfoFlags.NONE)
+        label.set_label(fileinfo.get_display_name())
+
+    @staticmethod
+    def setup(self, list_item):
+        box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        box.append(Gtk.Label.new())
+        list_item.set_child(box)
+
+
+class FilesListFactory(Gtk.SignalListItemFactory):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.connect("bind", self.bind)
+        self.connect("setup", self.setup)
+
+    @staticmethod
+    def bind(self, list_item):
+        box = list_item.get_child()
+        label = box.get_first_child()
+        model = list_item.get_item()
+        label.set_label(model.get_display_name())
+
+    @staticmethod
+    def setup(self, list_item):
+        box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        box.append(Gtk.Label.new())
+        list_item.set_child(box)
+
+
+@Gtk.Template(resource_path="/com/remcokranenburg/Dangit/window.ui")
 class DangitWindow(Adw.ApplicationWindow):
-    __gtype_name__ = 'DangitWindow'
+    __gtype_name__ = "DangitWindow"
 
     # ui elements
+    projects_view: Gtk.ListView = Gtk.Template.Child()
     stack: Gtk.Stack = Gtk.Template.Child()
     editor: GtkSource.View = Gtk.Template.Child()
     files: Gtk.ListView = Gtk.Template.Child()
 
     # project data
+    recent_manager: Gtk.RecentManager
+    projects: Gio.ListStore
     buffer: GtkSource.Buffer
 
     # theming
     language_manager: GtkSource.LanguageManager
     style_scheme_manager: GtkSource.StyleSchemeManager
 
-    def set_editor_style(self, settings, *_):
-        if settings.get_property("gtk-application-prefer-dark-theme"):
-            self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme('classic-dark'))
-        else:
-            self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme('classic'))
+    def update_recent_projects(self, recent_manager):
+        self.projects.remove_all()
+        recent_items = recent_manager.get_items()
 
-    def __init__(self, **kwargs):
+        for item in recent_items:
+            exists = item.exists()
+            print(item.get_applications())
+
+            if exists:
+                self.projects.append(Gio.File.new_for_uri(item.get_uri()))
+
+    def __init__(self, recent_manager, projects, **kwargs):
         super().__init__(**kwargs)
 
+        self.recent_manager = recent_manager
+        self.projects = projects
         self.buffer = self.editor.get_buffer()
         self.language_manager = GtkSource.LanguageManager.get_default()
         self.style_scheme_manager = GtkSource.StyleSchemeManager.get_default()
 
-        self.create_action('open-folder', self.on_open_folder_action)
+        self.create_action("open-folder", self.on_open_folder_action)
 
         self.editor.set_smart_backspace(True)
         self.editor.set_show_line_marks(True)
 
-        app_settings = Gio.Settings.new('com.remcokranenburg.Dangit')
+        app_settings = Gio.Settings.new("com.remcokranenburg.Dangit")
 
         # set initial values
         self.set_property("maximized", app_settings.get_boolean("window-maximized"))
@@ -74,22 +128,25 @@ class DangitWindow(Adw.ApplicationWindow):
         style_context = self.editor.get_style_context()
         style_context.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-        def on_bind(self, list_item):
-            box = list_item.get_child()
-            label = box.get_first_child()
-            model = list_item.get_item()
-            label.set_label(model.get_display_name())
+        self.files.set_factory(FilesListFactory())
 
-        def on_setup(self, list_item):
-            box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
-            box.append(Gtk.Label.new())
-            list_item.set_child(box)
+        self.update_recent_projects(self.recent_manager)
+        self.recent_manager.connect("changed", self.update_recent_projects)
+        self.projects_view.set_factory(ProjectsListFactory())
 
-        factory = Gtk.SignalListItemFactory.new()
-        factory.connect("bind", on_bind)
-        factory.connect("setup", on_setup)
+        def on_selected_project(selection, *_):
+            selected_folder = selection.get_selected_item()
+            self.load_selected_folder(selected_folder)
 
-        self.files.set_factory(factory)
+        selection_model = Gtk.SingleSelection(autoselect=False, model=self.projects)
+        selection_model.connect("selection_changed", on_selected_project)
+        self.projects_view.set_model(selection_model)
+
+    def set_editor_style(self, settings, *_):
+        if settings.get_property("gtk-application-prefer-dark-theme"):
+            self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme("classic-dark"))
+        else:
+            self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme("classic"))
 
     def load_selected_folder(self, folder: Gio.File):
         children = Gtk.DirectoryList.new("standard::display-name", folder)
@@ -114,11 +171,12 @@ class DangitWindow(Adw.ApplicationWindow):
         def on_selected(dialog, result):
             try:
                 folder = dialog.select_folder_finish(result)
+                self.recent_manager.add_item(folder.get_uri())
                 self.load_selected_folder(folder)
             except GLib.GError:
                 print("Nothing selected")
 
-        directory = Gio.File.new_for_path("/")
+        directory = Gio.File.new_for_path(GLib.get_home_dir())
         dialog = Gtk.FileDialog(initial_folder=directory)
         dialog.select_folder(self, None, on_selected)
 

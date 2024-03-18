@@ -5,8 +5,6 @@
   <template class="DangitWindow" parent="AdwApplicationWindow">
     <property name="width-request">300</property>
     <property name="height-request">200</property>
-    <property name="default-width">600</property>
-    <property name="default-height">300</property>
     <child>
       <object class="AdwBreakpoint">
         <condition>max-width: 400sp</condition>
@@ -31,9 +29,7 @@
                   </object>
                 </child>
                 <property name="content">
-                  <object class="GtkLabel">
-                    <property name="label">(Todo: list recent projects)</property>
-                  </object>
+                  <object class="GtkListView" id="projects_view"></object>
                 </property>
                 <child type="bottom">
                   <object class="GtkActionBar" id="action_bar">

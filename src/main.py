@@ -20,30 +20,36 @@
 import sys
 import gi
 
-gi.require_version('Gtk', '4.0')
-gi.require_version('GtkSource', '5')
-gi.require_version('Adw', '1')
+gi.require_version("Gtk", "4.0")
+gi.require_version("GtkSource", "5")
+gi.require_version("Adw", "1")
 
-from gi.repository import GObject, Gio, Adw, GtkSource
-from .window import DangitWindow
+from gi.repository import GObject, Gio, Adw, Gtk, GtkSource
+
+from dangit.window import DangitWindow
 
 
 class DangitApplication(Adw.Application):
     """The main application singleton class."""
 
     version: str
+    projects: Gio.ListStore
+    recent_manager: Gtk.RecentManager
 
     def __init__(self):
-        super().__init__(application_id='com.remcokranenburg.Dangit',
-                         flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
+        super().__init__(
+            application_id="com.remcokranenburg.Dangit", flags=Gio.ApplicationFlags.DEFAULT_FLAGS
+        )
         GtkSource.init()
         GObject.type_register(GtkSource.View)
-        self.create_action('open-project', self.on_open_project_action, ['<primary>o'])
-        self.create_action('quit', lambda *_: self.quit(), ['<primary>q'])
-        self.create_action('about', self.on_about_action)
-        self.create_action('preferences', self.on_preferences_action)
+        self.create_action("open-project", self.on_open_project_action, ["<primary>o"])
+        self.create_action("quit", lambda *_: self.quit(), ["<primary>q"])
+        self.create_action("about", self.on_about_action)
+        self.create_action("preferences", self.on_preferences_action)
 
         self.version = "unknown"
+        self.projects = Gio.ListStore.new(Gio.File)
+        self.recent_manager = Gtk.RecentManager.get_default()
 
     def do_activate(self):
         """Called when the application is activated.
@@ -53,31 +59,37 @@ class DangitApplication(Adw.Application):
         """
         win = self.props.active_window
         if not win:
-            win = DangitWindow(application=self)
+            win = DangitWindow(
+                projects=self.projects, recent_manager=self.recent_manager, application=self
+            )
         win.present()
 
     def on_open_project_action(self, widget, _):
         """Callback for the app.open-project action."""
-        win = DangitWindow(application=self)
+        win = DangitWindow(
+            projects=self.projects, recent_manager=self.recent_manager, application=self
+        )
         win.present()
 
     def on_about_action(self, widget, _):
         """Callback for the app.about action."""
-        about = Adw.AboutWindow(transient_for=self.props.active_window,
-                                application_name='Dangit!',
-                                application_icon='com.remcokranenburg.Dangit',
-                                developer_name='Remco Kranenburg',
-                                version=self.version,
-                                developers=['Remco Kranenburg'],
-                                copyright='© 2023 Remco Kranenburg')
+        about = Adw.AboutWindow(
+            transient_for=self.props.active_window,
+            application_name="Dangit!",
+            application_icon="com.remcokranenburg.Dangit",
+            developer_name="Remco Kranenburg",
+            version=self.version,
+            developers=["Remco Kranenburg"],
+            copyright="© 2023 Remco Kranenburg",
+        )
         about.present()
 
     def on_preferences_action(self, widget, _):
         """Callback for the app.preferences action."""
-        print('app.preferences action activated')
-    
+        print("app.preferences action activated")
+
     def create_action(self, name: str, callback, shortcuts=None):
-        """Add an application action 
+        """Add an application action
 
         Args:
             name: the name of the action
