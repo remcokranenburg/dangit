@@ -191,6 +191,15 @@ class DangitWindow(Adw.ApplicationWindow):
             loader = GtkSource.FileLoader.new(self.buffer, source_file)
             loader.load_async(GLib.PRIORITY_DEFAULT, None, None, None, None, None)
 
+            def save_buffer(buffer):
+                """Save the buffer to the file"""
+                source_file = GtkSource.File(location=selected_file)
+                if source_file:
+                    saver = GtkSource.FileSaver.new(buffer, source_file)
+                    saver.save_async(GLib.PRIORITY_DEFAULT, None, None, None, None, None)
+
+            self.buffer.connect("changed", save_buffer)
+
         selection_model.connect("selection_changed", on_selected_file)
         self.files.set_model(selection_model)
         self.stack.set_visible_child_name("editor")
