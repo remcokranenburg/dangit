@@ -17,7 +17,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-from gi.repository import Adw, Gio, Gtk, GtkSource, GLib
+from gi.repository import Adw, Gio, Gtk, GtkSource, GLib, Pango
 
 
 class ProjectsListFactory(Gtk.SignalListItemFactory):
@@ -29,16 +29,47 @@ class ProjectsListFactory(Gtk.SignalListItemFactory):
 
     @staticmethod
     def bind(self, list_item):
-        box = list_item.get_child()
-        label = box.get_first_child()
+        box: Gtk.Box = list_item.get_child()
+        title_label = box.get_first_child().get_first_child()
+        subtitle_label = box.get_first_child().get_last_child()
         model: Gio.File = list_item.get_item()
         fileinfo = model.query_info("standard::display-name", Gio.FileQueryInfoFlags.NONE)
-        label.set_label(fileinfo.get_display_name())
+        title_label.set_label(fileinfo.get_display_name())
+        subtitle_label.set_label(model.get_uri())
 
     @staticmethod
     def setup(self, list_item):
-        box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
-        box.append(Gtk.Label.new())
+        box = Gtk.Box(
+            margin_top=12,
+            margin_bottom=12,
+            margin_start=12,
+            margin_end=12,
+            orientation=Gtk.Orientation.HORIZONTAL,
+        )
+        title_box = Gtk.Box(
+            margin_start=6, hexpand=True, orientation=Gtk.Orientation.VERTICAL, spacing=6
+        )
+        title_attributes = Pango.AttrList.new()
+        title_attributes.insert(Pango.attr_weight_new(Pango.Weight.BOLD))
+        title_label = Gtk.Label(
+            xalign=0.0,
+            max_width_chars=0,
+            attributes=title_attributes,
+            name="title",
+        )
+        subtitle_label = Gtk.Label(
+            xalign=0.0,
+            max_width_chars=0,
+            css_classes=["dim-label"],
+            name="subtitle",
+        )
+        title_box.append(title_label)
+        title_box.append(subtitle_label)
+        box.append(title_box)
+
+        next_image = Gtk.Image(icon_name="go-next-symbolic", margin_start=12)
+        box.append(next_image)
+
         list_item.set_child(box)
 
 
@@ -88,7 +119,6 @@ class DangitWindow(Adw.ApplicationWindow):
 
         for item in recent_items:
             exists = item.exists()
-            print(item.get_applications())
 
             if exists:
                 self.projects.append(Gio.File.new_for_uri(item.get_uri()))
