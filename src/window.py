@@ -104,6 +104,9 @@ class DangitWindow(Adw.ApplicationWindow):
     editor: GtkSource.View = Gtk.Template.Child()
     files: Gtk.ListView = Gtk.Template.Child()
 
+    # os
+    os_settings: Gtk.Settings
+
     # project data
     recent_manager: Gtk.RecentManager
     projects: Gio.ListStore
@@ -149,9 +152,9 @@ class DangitWindow(Adw.ApplicationWindow):
         app_settings.bind("window-width", self, "default-width", Gio.SettingsBindFlags.SET)
         app_settings.bind("window-height", self, "default-height", Gio.SettingsBindFlags.SET)
 
-        os_settings = Gtk.Settings.get_default()
-        os_settings.connect("notify::gtk-application-prefer-dark-theme", self.set_editor_style)
-        self.set_editor_style(os_settings)
+        self.os_settings = Gtk.Settings.get_default()
+        self.os_settings.connect("notify::gtk-application-prefer-dark-theme", self.set_editor_style)
+        self.set_editor_style()
 
         provider = Gtk.CssProvider()
         provider.load_from_data("textview { font-family: Monospace; }")
@@ -172,8 +175,8 @@ class DangitWindow(Adw.ApplicationWindow):
         selection_model.connect("selection_changed", on_selected_project)
         self.projects_view.set_model(selection_model)
 
-    def set_editor_style(self, settings, *_):
-        if settings.get_property("gtk-application-prefer-dark-theme"):
+    def set_editor_style(self, *_):
+        if self.os_settings.get_property("gtk-application-prefer-dark-theme"):
             self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme("classic-dark"))
         else:
             self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme("classic"))
@@ -186,7 +189,10 @@ class DangitWindow(Adw.ApplicationWindow):
             selected_item = selection.get_selected_item()
             selected_file = selected_item.get_attribute_object("standard::file")
             guessed_language = self.language_manager.guess_language(selected_file.get_path(), None)
+            self.buffer = GtkSource.Buffer()
+            self.set_editor_style()
             self.buffer.set_language(guessed_language)
+            self.editor.set_buffer(self.buffer)
             source_file = GtkSource.File(location=selected_file)
             loader = GtkSource.FileLoader.new(self.buffer, source_file)
             loader.load_async(GLib.PRIORITY_DEFAULT, None, None, None, None, None)
