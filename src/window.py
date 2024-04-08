@@ -19,6 +19,8 @@
 
 from gi.repository import Adw, Gio, Gtk, GtkSource, GLib, Pango
 
+from dangit.files import FilesListFactory, create_files_tree_list_model
+
 
 class ProjectsListFactory(Gtk.SignalListItemFactory):
     def __init__(self, **kwargs):
@@ -70,27 +72,6 @@ class ProjectsListFactory(Gtk.SignalListItemFactory):
         next_image = Gtk.Image(icon_name="go-next-symbolic", margin_start=12)
         box.append(next_image)
 
-        list_item.set_child(box)
-
-
-class FilesListFactory(Gtk.SignalListItemFactory):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        self.connect("bind", self.bind)
-        self.connect("setup", self.setup)
-
-    @staticmethod
-    def bind(self, list_item):
-        box = list_item.get_child()
-        label = box.get_first_child()
-        model = list_item.get_item()
-        label.set_label(model.get_display_name())
-
-    @staticmethod
-    def setup(self, list_item):
-        box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
-        box.append(Gtk.Label.new())
         list_item.set_child(box)
 
 
@@ -182,12 +163,12 @@ class DangitWindow(Adw.ApplicationWindow):
             self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme("classic"))
 
     def load_selected_folder(self, folder: Gio.File):
-        children = Gtk.DirectoryList.new("standard::display-name", folder)
-        selection_model = Gtk.SingleSelection.new(children)
+        files_tree_model = create_files_tree_list_model(folder)
+        selection_model = Gtk.SingleSelection.new(files_tree_model)
 
         def on_selected_file(selection, *_):
-            selected_item = selection.get_selected_item()
-            selected_file = selected_item.get_attribute_object("standard::file")
+            selected_row = selection.get_selected_item()
+            selected_file = selected_row.get_item().get_attribute_object("standard::file")
             guessed_language = self.language_manager.guess_language(selected_file.get_path(), None)
             self.buffer = GtkSource.Buffer()
             self.set_editor_style()

@@ -28,6 +28,7 @@ configure_file(
 
 dangit_sources = [
   '__init__.py',
+  'files.py',
   'main.py',
   'window.py',
 ]
