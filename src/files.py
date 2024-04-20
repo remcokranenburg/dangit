@@ -27,27 +27,28 @@ class FilesListFactory(Gtk.SignalListItemFactory):
         list_item.set_child(expander)
 
 
-def create_filtered_directory_list(directory: Gio.File):
-    file_attributes = ",".join(
-        [
-            "standard::display-name",
-            "standard::type",
-            "standard::is-hidden",
-        ]
-    )
-    filter = Gtk.CustomFilter.new(lambda f: not f.get_is_hidden())
-    root = Gtk.DirectoryList.new(file_attributes, file=directory)
-    return Gtk.FilterListModel.new(root, filter)
+class FilesTreeListModel(Gtk.SortListModel):
+    app_settings: Gio.Settings
+    root: Gtk.FilterListModel
 
+    def __init__(self, directory: Gio.File):
+        self.app_settings = Gio.Settings.new("com.remcokranenburg.Dangit")
+        self.root = self.create_filtered_directory_list(directory)
+        tree_list = Gtk.TreeListModel.new(self.root, False, False, self.create_func)
+        sorter = Gtk.CustomSorter.new(self.sort_func)
+        row_sorter = Gtk.TreeListRowSorter.new(sorter)
+        super().__init__(model=tree_list, sorter=row_sorter)
 
-def create_files_tree_list_model(directory: Gio.File):
-    def create_func(item: Gio.FileInfo):
+        self.app_settings.connect("changed::show-hidden-files", self.on_show_hidden_files_changed)
+
+    def create_func(self, item: Gio.FileInfo):
         if item.get_file_type() == Gio.FileType.DIRECTORY:
             file = item.get_attribute_object("standard::file")
-            return create_filtered_directory_list(file)
+            return self.create_filtered_directory_list(file)
         else:
             return None
 
+    @staticmethod
     def sort_func(a: Gio.FileInfo, b: Gio.FileInfo, _user_data=None):
         a_name = a.get_display_name()
         b_name = b.get_display_name()
@@ -65,8 +66,23 @@ def create_files_tree_list_model(directory: Gio.File):
         else:
             return 1
 
-    root = create_filtered_directory_list(directory)
-    tree_list = Gtk.TreeListModel.new(root, False, False, create_func)
-    sorter = Gtk.CustomSorter.new(sort_func)
-    row_sorter = Gtk.TreeListRowSorter.new(sorter)
-    return Gtk.SortListModel.new(tree_list, row_sorter)
+    def filter_func(self, item: Gio.FileInfo):
+        if self.app_settings.get_boolean("show-hidden-files"):
+            return True
+        else:
+            return not item.get_is_hidden()
+
+    def create_filtered_directory_list(self, directory: Gio.File):
+        file_attributes = ",".join(
+            [
+                "standard::display-name",
+                "standard::type",
+                "standard::is-hidden",
+            ]
+        )
+        filter = Gtk.CustomFilter.new(self.filter_func)
+        root = Gtk.DirectoryList.new(file_attributes, file=directory)
+        return Gtk.FilterListModel.new(root, filter)
+
+    def on_show_hidden_files_changed(self, _settings, _key):
+        self.root.set_filter(Gtk.CustomFilter.new(self.filter_func))

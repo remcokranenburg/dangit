@@ -47,6 +47,7 @@ class DangitApplication(Adw.Application):
         self.create_action("close", lambda *_: self.props.active_window.close(), ["<primary>w"])
         self.create_action("about", self.on_about_action)
         self.create_action("preferences", self.on_preferences_action)
+        self.create_action("hidden-files", self.on_hidden_files_action, ["<primary>h"])
 
         self.version = "unknown"
         self.projects = Gio.ListStore.new(Gio.File)
@@ -88,6 +89,11 @@ class DangitApplication(Adw.Application):
     def on_preferences_action(self, widget, _):
         """Callback for the app.preferences action."""
         print("app.preferences action activated")
+
+    def on_hidden_files_action(self, widget, _):
+        app_settings = Gio.Settings.new("com.remcokranenburg.Dangit")
+        is_hidden = app_settings.get_boolean("show-hidden-files")
+        app_settings.set_boolean("show-hidden-files", not is_hidden)
 
     def create_action(self, name: str, callback, shortcuts=None):
         """Add an application action

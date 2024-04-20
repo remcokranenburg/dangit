@@ -16,5 +16,10 @@
       <summary>Window maximized</summary>
       <description>Maximized state of the window</description>
     </key>
+    <key name="show-hidden-files" type="b">
+      <default>false</default>
+      <summary>Show hidden files</summary>
+      <description>Show hidden files in the file browser</description>
+    </key>
   </schema>
 </schemalist>

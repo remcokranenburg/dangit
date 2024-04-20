@@ -19,7 +19,7 @@
 
 from gi.repository import Adw, Gio, Gtk, GtkSource, GLib, Pango
 
-from dangit.files import FilesListFactory, create_files_tree_list_model
+from dangit.files import FilesListFactory, FilesTreeListModel
 
 
 class ProjectsListFactory(Gtk.SignalListItemFactory):
@@ -163,7 +163,7 @@ class DangitWindow(Adw.ApplicationWindow):
             self.buffer.set_style_scheme(self.style_scheme_manager.get_scheme("classic"))
 
     def load_selected_folder(self, folder: Gio.File):
-        files_tree_model = create_files_tree_list_model(folder)
+        files_tree_model = FilesTreeListModel(folder)
         selection_model = Gtk.SingleSelection.new(files_tree_model)
 
         def on_selected_file(selection, *_):
